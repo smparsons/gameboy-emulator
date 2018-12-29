@@ -1,2 +1,2 @@
 compile :
-	g++ main.cpp -std=c++17 -o gbemu
+	gcc main.c -o gbemu

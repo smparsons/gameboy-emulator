@@ -1,2 +1,2 @@
 # gameboy-emulator
-A Gameboy emulator written using C++.
+A Gameboy emulator written using C.
