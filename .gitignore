@@ -33,3 +33,6 @@
 
 # Emulator Executable
 gbemu
+
+# VSCode Settings
+.vscode
