@@ -18,4 +18,6 @@ typedef struct CpuState
     Memory* memory;
 } CpuState;
 
+CpuState initializeCpu(char*);
+
 #endif

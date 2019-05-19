@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "src/mmu.h"
+#include "src/emulator.h"
 
 int main(int argc, char *argv[])
 {
@@ -9,22 +9,7 @@ int main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  Memory memory = initializeMemory();
-  loadGame(&memory, argv[1]);
-
-  printf("Printing out rom bytes...\n");
-
-  for (int i = 0; i < 0x8000; i++) {
-    printf("%u ", readByte(&memory, i));
-  }
-
-  printf("Writing byte to address 0x2AB2");
-  writeByte(&memory, 0x2AB2, 0x3C);
-  printf("Byte stored at address 0x2AB2 is %d", readByte(&memory, 0x2AB2));
-
-  printf("Writing word to address 0x13BD");
-  writeWord(&memory, 0x13BD, 0x5BDC);
-  printf("Word stored at address 0x13BD is %d", readWord(&memory, 0x13BD));
+  playGame(argv[1]);
 
   return 0;
 }
