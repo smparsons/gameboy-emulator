@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include "src/mmu.h"
 
 int main(int argc, char *argv[])
 {
@@ -10,25 +11,14 @@ int main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  const int numberOfBytes = 0x8000;
-  unsigned char buffer[numberOfBytes] = {0};
+  Memory memory = initializeMemory();
+  loadGame(&memory, argv[1]);
 
-  FILE *ptr;
-  char *romPath = argv[1];
-  ptr = fopen(romPath, "rb");
+  printf("Printing out first 0x8000 bytes of rom...");
 
-  if (ptr == NULL) {
-    fprintf(stderr, "Error opening file: %s\n", strerror(errno));
-    exit(EXIT_FAILURE);
+  for (int i = 0; i < 0x8000; i++) {
+    printf("%u ", memory.rom[i]);
   }
-
-  fread(buffer, sizeof(buffer), 1, ptr);
-
-  for (int i = 0; i < numberOfBytes; i++) {
-    printf("%u ", buffer[i]);
-  }
-
-  fclose(ptr);
 
   return 0;
 }

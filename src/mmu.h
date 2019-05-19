@@ -1,11 +1,7 @@
-#include <stdbool.h>
-
 #ifndef MMU_H
 #define MMU_H
 
 typedef struct Memory {
-    bool inBios;
-    unsigned char bios[0x100];
     unsigned char rom[0x8000];
     unsigned char graphicsRam[0x2000];
     unsigned char spriteRam[0xa0];
@@ -14,10 +10,13 @@ typedef struct Memory {
     unsigned char zeroPageRam[0x80];
 } Memory;
 
-unsigned char readByte(Memory* memory, unsigned short address);
-unsigned short readWord(Memory* memory, unsigned short address);
+Memory initializeMemory();
+void loadGame(Memory* memory, char*);
 
-void writeByte(Memory* memory, unsigned short address, unsigned char byte);
-void writeWord(Memory* memory, unsigned short address, unsigned short word);
+// unsigned char readByte(Memory*, unsigned short);
+// unsigned short readWord(Memory*, unsigned short);
+
+// void writeByte(Memory*, unsigned short, unsigned char);
+// void writeWord(Memory*, unsigned short, unsigned short);
 
 #endif
