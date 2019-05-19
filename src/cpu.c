@@ -1,6 +1,10 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
 #include "cpu.h"
 #include "mmu.h"
+
+void executeOpcode(unsigned char);
 
 CpuState initializeCpu(char *romPath) {
     Memory memory = initializeMemory();
@@ -29,4 +33,22 @@ CpuState initializeCpu(char *romPath) {
     };
 
     return cpuState;
+}
+
+void dispatchLoop(CpuState *cpuState) {
+    while (true) {
+        unsigned char nextOpcode = readByte(cpuState->memory, cpuState->registers.programCounter);
+        executeOpcode(nextOpcode);
+
+        cpuState->clock.totalClockCycles += cpuState->registers.clockCycles;
+        cpuState->clock.totalMachineCycles += cpuState->registers.machineCycles;
+        
+        cpuState->registers.programCounter++;
+        cpuState->registers.programCounter &= 0xFFFF;
+    }
+}
+
+void executeOpcode(unsigned char nextOpcode) {
+    fprintf(stderr, "Opcode %d has not been implemented!\n", nextOpcode);
+    exit(EXIT_FAILURE);
 }
