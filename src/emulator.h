@@ -1,7 +1,6 @@
-#ifndef CPU_H
-#define CPU_H
+#ifndef EMULATOR_H
+#define EMULATOR_H
 
 void playGame(char*);
 
 #endif
-
