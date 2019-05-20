@@ -9,7 +9,7 @@ Run the following command to compile:
 $ make compile
 ```
 
-Then run the following command to run the executable:
+Then run the executable, passing in the path to your rom as an argument:
 ```
-$ ./gbemu
+$ ./gbemu /path/to/rom
 ```
