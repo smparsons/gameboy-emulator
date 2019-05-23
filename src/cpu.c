@@ -3,8 +3,11 @@
 #include <stdbool.h>
 #include "cpu.h"
 #include "mmu.h"
+#include "microops.h"
+#include "constants.h"
 
-void executeOpcode(unsigned char);
+void executeNextOpcode(CpuState*);
+void loadImmediateValueInRegister(CpuState*, Register);
 
 CpuState initializeCpu(char *romPath) {
     Memory memory = initializeMemory();
@@ -22,11 +25,8 @@ CpuState initializeCpu(char *romPath) {
             .f=0,
             .programCounter=0,
             .stackPointer=0,
-            .machineCycles=0,
-            .clockCycles=0
         },
         .clock={
-            .totalMachineCycles=0,
             .totalClockCycles=0
         },
         .memory=&memory
@@ -37,18 +37,41 @@ CpuState initializeCpu(char *romPath) {
 
 void dispatchLoop(CpuState *cpuState) {
     while (true) {
-        unsigned char nextOpcode = readByte(cpuState->memory, cpuState->registers.programCounter);
-        executeOpcode(nextOpcode);
-
-        cpuState->clock.totalClockCycles += cpuState->registers.clockCycles;
-        cpuState->clock.totalMachineCycles += cpuState->registers.machineCycles;
-        
-        cpuState->registers.programCounter++;
-        cpuState->registers.programCounter &= 0xFFFF;
+        executeNextOpcode(cpuState);
     }
 }
 
-void executeOpcode(unsigned char nextOpcode) {
-    fprintf(stderr, "Opcode %d has not been implemented!\n", nextOpcode);
-    exit(EXIT_FAILURE);
+void executeNextOpcode(CpuState *cpuState) {
+    unsigned char nextOpcode = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
+
+    switch (nextOpcode) {
+        case 0x06:
+            loadImmediateValueInRegister(cpuState, registerB);
+            break;
+        case 0x0E:
+            loadImmediateValueInRegister(cpuState, registerC);
+            break;
+        case 0x16:
+            loadImmediateValueInRegister(cpuState, registerD);
+            break;
+        case 0x1E:
+            loadImmediateValueInRegister(cpuState, registerE);
+            break;
+        case 0x26:
+            loadImmediateValueInRegister(cpuState, registerH);
+            break;
+        case 0x2E:
+            loadImmediateValueInRegister(cpuState, registerL);
+            break;
+        default:
+            fprintf(stderr, "Opcode %d has not been implemented!\n", nextOpcode);
+            exit(EXIT_FAILURE);
+    }
+
+    cpuState->registers.programCounter &= 0xFFFF;
+}
+
+void loadImmediateValueInRegister(CpuState *cpuState, Register registerToLoad) {
+    unsigned char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
+    storeInRegister(cpuState, registerToLoad, immediateValue);
 }

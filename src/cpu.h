@@ -8,11 +8,10 @@ typedef struct CpuState
     struct {
         unsigned char a, b, c, d, e, h, l, f;
         unsigned short programCounter, stackPointer;
-        int machineCycles, clockCycles;
     } registers;
 
     struct {
-        int totalMachineCycles, totalClockCycles;
+        int totalClockCycles;
     } clock;
 
     Memory* memory;
