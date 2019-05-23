@@ -4,7 +4,7 @@
 #include "constants.h"
 
 unsigned char readByteFromMemory(CpuState* cpuState, unsigned short address) {
-    unsigned char byte = readByte(cpuState->memory, cpuState->registers.programCounter++);
+    unsigned char byte = readByte(cpuState->memory, address);
     cpuState->clock.totalClockCycles += 4;
     return byte;
 }
