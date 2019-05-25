@@ -9,9 +9,36 @@ unsigned char readByteFromMemory(CpuState* cpuState, unsigned short address) {
     return byte;
 }
 
+unsigned short readWordFromMemory(CpuState* cpuState, unsigned short address) {
+    unsigned short word = readWord(cpuState->memory, address);
+    cpuState->clock.totalClockCycles += 8;
+    return word;
+}
+
 void storeByteInMemory(CpuState* cpuState, unsigned short address, unsigned char byte) {
     writeByte(cpuState->memory, address, byte);
     cpuState->clock.totalClockCycles += 4;
+}
+
+unsigned char readFromRegister(CpuState* cpuState, Register registerToRead) {
+    switch (registerToRead) {
+        case registerA:
+            return cpuState->registers.a;
+        case registerB:
+            return cpuState->registers.b;
+        case registerC:
+            return cpuState->registers.c;
+        case registerD:
+            return cpuState->registers.d;
+        case registerE:
+            return cpuState->registers.e;
+        case registerH:
+            return cpuState->registers.h;
+        case registerL:
+            return cpuState->registers.l;
+        case registerF:
+            return cpuState->registers.f;
+    }
 }
 
 void storeInRegister(CpuState* cpuState, Register registerToLoad, unsigned char value) {
@@ -40,26 +67,5 @@ void storeInRegister(CpuState* cpuState, Register registerToLoad, unsigned char 
         case registerF:
             cpuState->registers.f = value;
             break; 
-    }
-}
-
-unsigned char readFromRegister(CpuState* cpuState, Register registerToRead) {
-    switch (registerToRead) {
-        case registerA:
-            return cpuState->registers.a;
-        case registerB:
-            return cpuState->registers.b;
-        case registerC:
-            return cpuState->registers.c;
-        case registerD:
-            return cpuState->registers.d;
-        case registerE:
-            return cpuState->registers.e;
-        case registerH:
-            return cpuState->registers.h;
-        case registerL:
-            return cpuState->registers.l;
-        case registerF:
-            return cpuState->registers.f;
     }
 }
