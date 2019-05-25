@@ -1,4 +1,5 @@
 #include "mmu.h"
+#include "constants.h"
 
 #ifndef CPU_H
 #define CPU_H
