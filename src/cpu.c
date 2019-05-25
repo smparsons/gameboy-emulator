@@ -13,6 +13,7 @@ void loadMemoryByteInDestinationRegister(CpuState*, RegisterPair, Register);
 void loadSourceRegisterInMemory(CpuState*, Register, RegisterPair);
 void loadImmediateValueInMemory(CpuState*, RegisterPair);
 unsigned short concatenateTwoRegisters(CpuState*, Register, Register);
+void handleIllegalOpcode(unsigned char);
 
 const RegisterPair registerHL = { .first = registerH, .second = registerL };
 
@@ -241,6 +242,42 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0x7F:
             loadSourceRegisterInDestinationRegister(cpuState, registerA, registerA);
             break;
+        case 0xD3:
+            handleIllegalOpcode(nextOpcode);
+            break;
+        case 0xDB:
+            handleIllegalOpcode(nextOpcode);
+            break;
+        case 0xDD:
+            handleIllegalOpcode(nextOpcode);
+            break;
+        case 0xE3:
+            handleIllegalOpcode(nextOpcode);
+            break;
+        case 0xE4:
+            handleIllegalOpcode(nextOpcode);
+            break;
+        case 0xEB:
+            handleIllegalOpcode(nextOpcode);
+            break;  
+        case 0xEC:
+            handleIllegalOpcode(nextOpcode);
+            break;
+        case 0xED:
+            handleIllegalOpcode(nextOpcode);
+            break;
+        case 0xF2:
+            handleIllegalOpcode(nextOpcode);
+            break;
+        case 0xF4:
+            handleIllegalOpcode(nextOpcode);
+            break;
+        case 0xFC:
+            handleIllegalOpcode(nextOpcode);
+            break;
+        case 0xFD:
+            handleIllegalOpcode(nextOpcode);
+            break;
         default:
             fprintf(stderr, "Opcode %d has not been implemented!\n", nextOpcode);
             exit(EXIT_FAILURE);
@@ -281,4 +318,9 @@ unsigned short concatenateTwoRegisters(CpuState *cpuState, Register firstRegiste
     unsigned char firstByte = readFromRegister(cpuState, firstRegister);
     unsigned char secondByte = readFromRegister(cpuState, secondRegister);
     return (firstByte << 8) | secondByte;
+}
+
+void handleIllegalOpcode(unsigned char opcode) {
+    fprintf(stderr, "Encountered illegal opcode %d!\n", opcode);
+    exit(EXIT_FAILURE);
 }
