@@ -334,8 +334,8 @@ void executeNextOpcode(CpuState *cpuState) {
             handleIllegalOpcode(nextOpcode);
             break;
         case 0xEA: {
-            unsigned short immediateValueAdddress = cpuState->registers.programCounter + 1;
-            unsigned short address = readWordFromMemory(cpuState, immediateValueAdddress);
+            unsigned short immediateValueAddress = cpuState->registers.programCounter + 1;
+            unsigned short address = readWordFromMemory(cpuState, immediateValueAddress);
             loadSourceRegisterInMemory(cpuState, registerA, address);
             cpuState->registers.programCounter += 2;
             break;
@@ -356,8 +356,8 @@ void executeNextOpcode(CpuState *cpuState) {
             handleIllegalOpcode(nextOpcode);
             break;
         case 0xFA: {
-            unsigned short immediateValueAdddress = cpuState->registers.programCounter + 1;
-            unsigned short address = readWordFromMemory(cpuState, immediateValueAdddress);
+            unsigned short immediateValueAddress = cpuState->registers.programCounter + 1;
+            unsigned short address = readWordFromMemory(cpuState, immediateValueAddress);
             loadMemoryByteInDestinationRegister(cpuState, address, registerA);
             cpuState->registers.programCounter += 2;
             break;
