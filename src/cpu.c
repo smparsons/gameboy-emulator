@@ -55,6 +55,11 @@ void executeNextOpcode(CpuState *cpuState) {
     unsigned char nextOpcode = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
 
     switch (nextOpcode) {
+        case 0x02: {
+            unsigned short address = concatenateRegisterPairValues(cpuState, registerBC);
+            loadSourceRegisterInMemory(cpuState, registerA, address);
+            break;
+        }
         case 0x06:
             loadImmediateValueInRegister(cpuState, registerB);
             break;
@@ -66,6 +71,11 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0x0E:
             loadImmediateValueInRegister(cpuState, registerC);
             break;
+        case 0x12: {
+            unsigned short address = concatenateRegisterPairValues(cpuState, registerDE);
+            loadSourceRegisterInMemory(cpuState, registerA, address);
+            break;
+        }
         case 0x16:
             loadImmediateValueInRegister(cpuState, registerD);
             break;
@@ -114,6 +124,9 @@ void executeNextOpcode(CpuState *cpuState) {
             loadMemoryByteInDestinationRegister(cpuState, address, registerB);
             break;  
         }
+        case 0x47:
+            loadSourceRegisterInDestinationRegister(cpuState, registerA, registerB);
+            break;
         case 0x48:
             loadSourceRegisterInDestinationRegister(cpuState, registerB, registerC);
             break;
@@ -137,6 +150,9 @@ void executeNextOpcode(CpuState *cpuState) {
             loadMemoryByteInDestinationRegister(cpuState, address, registerC);
             break;
         }
+        case 0x4F:
+            loadSourceRegisterInDestinationRegister(cpuState, registerA, registerC);
+            break;
         case 0x50:
             loadSourceRegisterInDestinationRegister(cpuState, registerB, registerD);
             break;
@@ -160,6 +176,9 @@ void executeNextOpcode(CpuState *cpuState) {
             loadMemoryByteInDestinationRegister(cpuState, address, registerD);
             break;
         }
+        case 0x57:
+            loadSourceRegisterInDestinationRegister(cpuState, registerA, registerD);
+            break;
         case 0x58:
             loadSourceRegisterInDestinationRegister(cpuState, registerB, registerE);
             break;
@@ -183,6 +202,9 @@ void executeNextOpcode(CpuState *cpuState) {
             loadMemoryByteInDestinationRegister(cpuState, address, registerE);
             break;
         }
+        case 0x5F:
+            loadSourceRegisterInDestinationRegister(cpuState, registerA, registerE);
+            break;
         case 0x60:
             loadSourceRegisterInDestinationRegister(cpuState, registerB, registerH);
             break;
@@ -206,6 +228,9 @@ void executeNextOpcode(CpuState *cpuState) {
             loadMemoryByteInDestinationRegister(cpuState, address, registerH);
             break;
         }
+        case 0x67:
+            loadSourceRegisterInDestinationRegister(cpuState, registerA, registerH);
+            break;
         case 0x68: 
             loadSourceRegisterInDestinationRegister(cpuState, registerB, registerL);
             break;
@@ -229,6 +254,9 @@ void executeNextOpcode(CpuState *cpuState) {
             loadMemoryByteInDestinationRegister(cpuState, address, registerL);
             break;
         }
+        case 0x6F:
+            loadSourceRegisterInDestinationRegister(cpuState, registerA, registerL);
+            break;
         case 0x70: {
             unsigned short address = concatenateRegisterPairValues(cpuState, registerHL); 
             loadSourceRegisterInMemory(cpuState, registerB, address);
@@ -257,6 +285,11 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0x75: {
             unsigned short address = concatenateRegisterPairValues(cpuState, registerHL);
             loadSourceRegisterInMemory(cpuState, registerL, address);
+            break;
+        }
+        case 0x77: {
+            unsigned short address = concatenateRegisterPairValues(cpuState, registerHL);
+            loadSourceRegisterInMemory(cpuState, registerA, address);
             break;
         }
         case 0x78:
@@ -300,6 +333,13 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0xE4:
             handleIllegalOpcode(nextOpcode);
             break;
+        case 0xEA: {
+            unsigned short immediateValueAdddress = cpuState->registers.programCounter + 1;
+            unsigned short address = readWordFromMemory(cpuState, immediateValueAdddress);
+            loadSourceRegisterInMemory(cpuState, registerA, address);
+            cpuState->registers.programCounter += 2;
+            break;
+        }
         case 0xEB:
             handleIllegalOpcode(nextOpcode);
             break;  
@@ -320,6 +360,7 @@ void executeNextOpcode(CpuState *cpuState) {
             unsigned short address = readWordFromMemory(cpuState, immediateValueAdddress);
             loadMemoryByteInDestinationRegister(cpuState, address, registerA);
             cpuState->registers.programCounter += 2;
+            break;
         }
         case 0xFC:
             handleIllegalOpcode(nextOpcode);
