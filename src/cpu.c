@@ -327,6 +327,12 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0xDD:
             handleIllegalOpcode(nextOpcode);
             break;
+        case 0xE2: {
+            unsigned char registerAValue = readFromRegister(cpuState, registerA);
+            unsigned char registerCValue = readFromRegister(cpuState, registerC);
+            storeByteInMemory(cpuState, 0xFF00 + registerCValue, registerAValue);
+            break;
+        }
         case 0xE3:
             handleIllegalOpcode(nextOpcode);
             break;
@@ -349,9 +355,11 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0xED:
             handleIllegalOpcode(nextOpcode);
             break;
-        case 0xF2:
-            handleIllegalOpcode(nextOpcode);
+        case 0xF2: {
+            unsigned char registerValue = readFromRegister(cpuState, registerC);
+            loadMemoryByteInDestinationRegister(cpuState, 0xFF00 + registerValue, registerA);
             break;
+        }
         case 0xF4:
             handleIllegalOpcode(nextOpcode);
             break;
