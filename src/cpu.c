@@ -54,6 +54,8 @@ void executeNextOpcode(CpuState *cpuState) {
     unsigned char nextOpcode = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
 
     switch (nextOpcode) {
+        case 0x00:
+            break;
         case 0x02: {
             unsigned short address = readFromRegisterPair(cpuState, registerBC);
             loadSourceRegisterInMemory(cpuState, registerA, address);
