@@ -69,3 +69,14 @@ void storeInRegister(CpuState* cpuState, Register registerToLoad, unsigned char 
             break; 
     }
 }
+
+unsigned short readFromRegisterPair(CpuState* cpuState, RegisterPair registerPair) {
+    unsigned char firstByte = readFromRegister(cpuState, registerPair.first);
+    unsigned char secondByte = readFromRegister(cpuState, registerPair.second);
+    return (firstByte << 8) | secondByte;
+}
+
+void storeInRegisterPair(CpuState* cpuState, RegisterPair registerPair, unsigned short value) {
+    storeInRegister(cpuState, registerPair.first, (value >> 8) & 0xFF);
+    storeInRegister(cpuState, registerPair.second, value & 0xFF);
+}

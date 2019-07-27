@@ -18,12 +18,6 @@ typedef struct CpuState
     Memory* memory;
 } CpuState;
 
-typedef struct RegisterPair
-{
-    Register first;
-    Register second;
-} RegisterPair;
-
 CpuState initializeCpu(char*);
 void dispatchLoop(CpuState*);
 
