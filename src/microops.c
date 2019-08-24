@@ -80,3 +80,7 @@ void storeInRegisterPair(CpuState* cpuState, RegisterPair registerPair, unsigned
     storeInRegister(cpuState, registerPair.first, (value >> 8) & 0xFF);
     storeInRegister(cpuState, registerPair.second, value & 0xFF);
 }
+
+void runExtraMachineCycle(CpuState* cpuState) {
+    cpuState->clock.totalClockCycles += 4;
+}

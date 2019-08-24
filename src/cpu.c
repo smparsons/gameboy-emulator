@@ -414,6 +414,12 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0xF4:
             handleIllegalOpcode(nextOpcode);
             break;
+        case 0xF9: {
+            unsigned short address = readFromRegisterPair(cpuState, registerHL);
+            cpuState->registers.stackPointer = address;
+            runExtraMachineCycle(cpuState);
+            break;
+        }
         case 0xFA: {
             unsigned short immediateValueAddress = cpuState->registers.programCounter + 1;
             unsigned short address = readWordFromMemory(cpuState, immediateValueAddress);
