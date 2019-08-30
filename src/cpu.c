@@ -418,6 +418,7 @@ void executeNextOpcode(CpuState *cpuState) {
             unsigned char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
             unsigned short valueToStore = cpuState->registers.stackPointer + immediateValue;        
             storeInRegisterPair(cpuState, registerHL, valueToStore);
+            runExtraMachineCycle(cpuState);
             break;
         }
         case 0xF9: {
