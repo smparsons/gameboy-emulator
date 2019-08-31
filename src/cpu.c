@@ -68,6 +68,11 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0x06:
             loadImmediateByteInRegister(cpuState, registerB);
             break;
+        case 0x08: {
+            unsigned short address = readWordFromMemory(cpuState, cpuState->registers.programCounter++);
+            storeWordInMemory(cpuState, address, cpuState->registers.stackPointer);
+            break;
+        }
         case 0x0A: {
             unsigned short address = readFromRegisterPair(cpuState, registerBC);
             loadMemoryByteInDestinationRegister(cpuState, address, registerA);

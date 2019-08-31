@@ -7,6 +7,7 @@
 unsigned char readByteFromMemory(CpuState*, unsigned short);
 unsigned short readWordFromMemory(CpuState*, unsigned short);
 void storeByteInMemory(CpuState*, unsigned short, unsigned char);
+void storeWordInMemory(CpuState*, unsigned short, unsigned short);
 unsigned char readFromRegister(CpuState*, Register);
 void storeInRegister(CpuState*, Register, unsigned char);
 unsigned short readFromRegisterPair(CpuState*, RegisterPair);

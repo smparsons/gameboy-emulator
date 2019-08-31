@@ -20,6 +20,11 @@ void storeByteInMemory(CpuState* cpuState, unsigned short address, unsigned char
     cpuState->clock.totalClockCycles += 4;
 }
 
+void storeWordInMemory(CpuState* cpuState, unsigned short address, unsigned short word) {
+    writeByte(cpuState->memory, address, (word >> 8) & 0xFF);
+    writeByte(cpuState->memory, address + 1, word & 0xFF);
+}
+
 unsigned char readFromRegister(CpuState* cpuState, Register registerToRead) {
     switch (registerToRead) {
         case registerA:
