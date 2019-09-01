@@ -13,8 +13,11 @@ void loadImmediateWordInRegisterPair(CpuState*, RegisterPair);
 void loadSourceRegisterInDestinationRegister(CpuState*, Register, Register);
 void loadMemoryByteInDestinationRegister(CpuState*, short, Register);
 void loadSourceRegisterInMemory(CpuState*, Register, short);
+void pushRegisterPair(CpuState*, RegisterPair);
+void popRegisterPair(CpuState*, RegisterPair);
 void handleIllegalOpcode(unsigned char);
 
+const RegisterPair registerAF = { .first = registerA, .second = registerF };
 const RegisterPair registerBC = { .first = registerB, .second = registerC };
 const RegisterPair registerDE = { .first = registerD, .second = registerE };
 const RegisterPair registerHL = { .first = registerH, .second = registerL };
@@ -363,8 +366,20 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0x7F:
             loadSourceRegisterInDestinationRegister(cpuState, registerA, registerA);
             break;
+        case 0xC1:
+            popRegisterPair(cpuState, registerBC);
+            break;
+        case 0xC5:
+            pushRegisterPair(cpuState, registerBC);
+            break;
+        case 0xD1:
+            popRegisterPair(cpuState, registerDE);
+            break;
         case 0xD3:
             handleIllegalOpcode(nextOpcode);
+            break;
+        case 0xD5:
+            pushRegisterPair(cpuState, registerDE);
             break;
         case 0xDB:
             handleIllegalOpcode(nextOpcode);
@@ -378,6 +393,9 @@ void executeNextOpcode(CpuState *cpuState) {
             storeByteInMemory(cpuState, 0xFF00 + immediateValue, registerValue);
             break;
         }
+        case 0xE1:
+            popRegisterPair(cpuState, registerHL);
+            break;
         case 0xE2: {
             unsigned char registerAValue = readFromRegister(cpuState, registerA);
             unsigned char registerCValue = readFromRegister(cpuState, registerC);
@@ -389,6 +407,9 @@ void executeNextOpcode(CpuState *cpuState) {
             break;
         case 0xE4:
             handleIllegalOpcode(nextOpcode);
+            break;
+        case 0xE5:
+            pushRegisterPair(cpuState, registerHL);
             break;
         case 0xEA: {
             unsigned short immediateValueAddress = cpuState->registers.programCounter + 1;
@@ -411,6 +432,9 @@ void executeNextOpcode(CpuState *cpuState) {
             loadMemoryByteInDestinationRegister(cpuState, 0xFF00 + immediateValue, registerA);
             break;
         }
+        case 0xF1:
+            popRegisterPair(cpuState, registerAF);
+            break;
         case 0xF2: {
             unsigned char registerValue = readFromRegister(cpuState, registerC);
             loadMemoryByteInDestinationRegister(cpuState, 0xFF00 + registerValue, registerA);
@@ -418,6 +442,9 @@ void executeNextOpcode(CpuState *cpuState) {
         }
         case 0xF4:
             handleIllegalOpcode(nextOpcode);
+            break;
+        case 0xF5:
+            pushRegisterPair(cpuState, registerAF);
             break;
         case 0xF8: {
             unsigned char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
@@ -481,6 +508,21 @@ void loadMemoryByteInDestinationRegister(CpuState *cpuState, short sourceAddress
 void loadSourceRegisterInMemory(CpuState *cpuState, Register sourceRegister, short destinationAddress) {
     unsigned char memoryValue = readFromRegister(cpuState, sourceRegister);
     storeByteInMemory(cpuState, destinationAddress, memoryValue);
+}
+
+void pushRegisterPair(CpuState *cpuState, RegisterPair registerPair) {
+    cpuState->registers.stackPointer--;
+    loadSourceRegisterInMemory(cpuState, registerPair.first, cpuState->registers.stackPointer);
+    cpuState->registers.stackPointer--;
+    loadSourceRegisterInMemory(cpuState, registerPair.second, cpuState->registers.stackPointer);
+    runExtraMachineCycle(cpuState);
+}
+
+void popRegisterPair(CpuState *cpuState, RegisterPair registerPair) {
+    loadMemoryByteInDestinationRegister(cpuState, cpuState->registers.stackPointer, registerPair.second);
+    cpuState->registers.stackPointer++;
+    loadMemoryByteInDestinationRegister(cpuState, cpuState->registers.stackPointer, registerPair.first);
+    cpuState->registers.stackPointer++;
 }
 
 void handleIllegalOpcode(unsigned char opcode) {
