@@ -8,11 +8,12 @@
 
 void executeNextOpcode(CpuState*);
 void loadImmediateByteInRegister(CpuState*, Register);
-void loadImmediateByteInMemory(CpuState*, short);
+void loadImmediateByteInMemory(CpuState*, unsigned short);
 void loadImmediateWordInRegisterPair(CpuState*, RegisterPair);
 void loadSourceRegisterInDestinationRegister(CpuState*, Register, Register);
-void loadMemoryByteInDestinationRegister(CpuState*, short, Register);
-void loadSourceRegisterInMemory(CpuState*, Register, short);
+void loadMemoryByteInDestinationRegister(CpuState*, unsigned short, Register);
+void loadSourceRegisterInMemory(CpuState*, Register, unsigned short);
+void addToRegister(CpuState*, Register, unsigned short);
 void pushRegisterPair(CpuState*, RegisterPair);
 void popRegisterPair(CpuState*, RegisterPair);
 void handleIllegalOpcode(unsigned char);
@@ -366,12 +367,44 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0x7F:
             loadSourceRegisterInDestinationRegister(cpuState, registerA, registerA);
             break;
+        case 0x80:
+            addToRegister(cpuState, registerA, readFromRegister(cpuState, registerB));
+            break;
+        case 0x81:
+            addToRegister(cpuState, registerA, readFromRegister(cpuState, registerC));
+            break;
+        case 0x82:
+            addToRegister(cpuState, registerA, readFromRegister(cpuState, registerD));
+            break;
+        case 0x83:
+            addToRegister(cpuState, registerA, readFromRegister(cpuState, registerE));
+            break;
+        case 0x84:
+            addToRegister(cpuState, registerA, readFromRegister(cpuState, registerH));
+            break;
+        case 0x85:
+            addToRegister(cpuState, registerA, readFromRegister(cpuState, registerL));
+            break;
+        case 0x86: {
+            unsigned short address = readFromRegisterPair(cpuState, registerHL);
+            unsigned char value = readByteFromMemory(cpuState, address);
+            addToRegister(cpuState, registerA, value);
+            break;
+        }
+        case 0x87:
+            addToRegister(cpuState, registerA, readFromRegister(cpuState, registerA));
+            break;
         case 0xC1:
             popRegisterPair(cpuState, registerBC);
             break;
         case 0xC5:
             pushRegisterPair(cpuState, registerBC);
             break;
+        case 0xC6: {
+            unsigned char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
+            addToRegister(cpuState, registerA, immediateValue);
+            break;
+        }
         case 0xD1:
             popRegisterPair(cpuState, registerDE);
             break;
@@ -485,7 +518,7 @@ void loadImmediateByteInRegister(CpuState *cpuState, Register registerToLoad) {
     storeInRegister(cpuState, registerToLoad, immediateValue);
 }
 
-void loadImmediateByteInMemory(CpuState *cpuState, short destinationAddress) {
+void loadImmediateByteInMemory(CpuState *cpuState, unsigned short destinationAddress) {
     unsigned char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
     storeByteInMemory(cpuState, destinationAddress, immediateValue);
 }
@@ -500,14 +533,27 @@ void loadSourceRegisterInDestinationRegister(CpuState *cpuState, Register source
     storeInRegister(cpuState, destinationRegister, sourceRegisterValue);
 }
 
-void loadMemoryByteInDestinationRegister(CpuState *cpuState, short sourceAddress, Register destinationRegister) {
+void loadMemoryByteInDestinationRegister(CpuState *cpuState, unsigned short sourceAddress, Register destinationRegister) {
     unsigned char memoryByte = readByteFromMemory(cpuState, sourceAddress);
     storeInRegister(cpuState, destinationRegister, memoryByte);
 }
 
-void loadSourceRegisterInMemory(CpuState *cpuState, Register sourceRegister, short destinationAddress) {
+void loadSourceRegisterInMemory(CpuState *cpuState, Register sourceRegister, unsigned short destinationAddress) {
     unsigned char memoryValue = readFromRegister(cpuState, sourceRegister);
     storeByteInMemory(cpuState, destinationAddress, memoryValue);
+}
+
+void addToRegister(CpuState *cpuState, Register sourceRegister, unsigned short value) {
+    unsigned char sourceRegisterValue = readFromRegister(cpuState, sourceRegister);
+    unsigned char result = (sourceRegisterValue + value) & 0xFF;
+
+    unsigned char flagResult = 0;
+    if (result == 0) flagResult |= 0x80; // Flag Z
+    if ((sourceRegisterValue & 0x0F) + (value & 0x0F) > 0x0F) flagResult |= 0x20; // Flag H
+    if (sourceRegisterValue + value > 0xFF) flagResult |= 0x10; // Flag C
+
+    storeInRegister(cpuState, sourceRegister, result);
+    storeInRegister(cpuState, registerF, flagResult);
 }
 
 void pushRegisterPair(CpuState *cpuState, RegisterPair registerPair) {
