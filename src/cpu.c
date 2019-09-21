@@ -13,7 +13,8 @@ void loadImmediateWordInRegisterPair(CpuState*, RegisterPair);
 void loadSourceRegisterInDestinationRegister(CpuState*, Register, Register);
 void loadMemoryByteInDestinationRegister(CpuState*, unsigned short, Register);
 void loadSourceRegisterInMemory(CpuState*, Register, unsigned short);
-void addToRegister(CpuState*, Register, unsigned short);
+void addToRegister(CpuState*, Register, unsigned char);
+void compareRegister(CpuState*, Register, unsigned char);
 void pushRegisterPair(CpuState*, RegisterPair);
 void popRegisterPair(CpuState*, RegisterPair);
 void handleIllegalOpcode(unsigned char);
@@ -396,8 +397,38 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0x87:
             addToRegister(cpuState, registerA, readFromRegister(cpuState, registerA));
             break;
+        case 0xB8:
+            compareRegister(cpuState, registerA, readFromRegister(cpuState, registerB));
+            break;
+        case 0xB9:
+            compareRegister(cpuState, registerA, readFromRegister(cpuState, registerC));
+            break;
+        case 0xBA:
+            compareRegister(cpuState, registerA, readFromRegister(cpuState, registerD));
+            break;
+        case 0xBB:
+            compareRegister(cpuState, registerA, readFromRegister(cpuState, registerE));
+            break;
+        case 0xBC:
+            compareRegister(cpuState, registerA, readFromRegister(cpuState, registerH));
+            break;
+        case 0xBD:
+            compareRegister(cpuState, registerA, readFromRegister(cpuState, registerL));
+            break;
+        case 0xBE: {
+            unsigned short address = readFromRegisterPair(cpuState, registerHL);
+            unsigned char value = readByteFromMemory(cpuState, address);
+            compareRegister(cpuState, registerA, value);
+            break;
+        }
+        case 0xBF:
+            compareRegister(cpuState, registerA, readFromRegister(cpuState, registerA));
+            break;
         case 0xC1:
             popRegisterPair(cpuState, registerBC);
+            break;
+        case 0xC3:
+            cpuState->registers.programCounter = readWordFromMemory(cpuState, cpuState->registers.programCounter);
             break;
         case 0xC5:
             pushRegisterPair(cpuState, registerBC);
@@ -505,6 +536,9 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0xFD:
             handleIllegalOpcode(nextOpcode);
             break;
+        case 0xFE:
+            compareRegister(cpuState, registerA, readByteFromMemory(cpuState, cpuState->registers.programCounter++));
+            break;
         default:
             fprintf(stderr, "Opcode %d has not been implemented!\n", nextOpcode);
             exit(EXIT_FAILURE);
@@ -544,7 +578,7 @@ void loadSourceRegisterInMemory(CpuState *cpuState, Register sourceRegister, uns
     storeByteInMemory(cpuState, destinationAddress, memoryValue);
 }
 
-void addToRegister(CpuState *cpuState, Register sourceRegister, unsigned short value) {
+void addToRegister(CpuState *cpuState, Register sourceRegister, unsigned char value) {
     unsigned char sourceRegisterValue = readFromRegister(cpuState, sourceRegister);
     unsigned char result = (sourceRegisterValue + value) & 0xFF;
 
@@ -554,6 +588,18 @@ void addToRegister(CpuState *cpuState, Register sourceRegister, unsigned short v
     if (sourceRegisterValue + value > 0xFF) flagResult |= 0x10; // Flag C
 
     storeInRegister(cpuState, sourceRegister, result);
+    storeInRegister(cpuState, registerF, flagResult);
+}
+
+void compareRegister(CpuState *cpuState, Register sourceRegister, unsigned char value) {
+    unsigned char sourceRegisterValue = readFromRegister(cpuState, sourceRegister);
+
+    unsigned char flagResult = 0;
+    if (sourceRegisterValue == value) flagResult |= 0x80; // Flag Z
+    flagResult |= 0x40; // Flag N
+    if ((sourceRegisterValue & 0x0F) < (value & 0x0F)) flagResult |= 0x20; // Flag H
+    if (sourceRegisterValue < value) flagResult |= 0x10; // Flag C
+
     storeInRegister(cpuState, registerF, flagResult);
 }
 
