@@ -73,8 +73,9 @@ void executeNextOpcode(CpuState *cpuState) {
             loadImmediateByteInRegister(cpuState, registerB);
             break;
         case 0x08: {
-            unsigned short address = readWordFromMemory(cpuState, cpuState->registers.programCounter++);
+            unsigned short address = readWordFromMemory(cpuState, cpuState->registers.programCounter);
             storeWordInMemory(cpuState, address, cpuState->registers.stackPointer);
+            cpuState->registers.programCounter += 2;
             break;
         }
         case 0x0A: {
@@ -126,8 +127,9 @@ void executeNextOpcode(CpuState *cpuState) {
             loadImmediateByteInRegister(cpuState, registerL);
             break;
         case 0x31: {
-            unsigned short immediateValue = readWordFromMemory(cpuState, cpuState->registers.programCounter++);
+            unsigned short immediateValue = readWordFromMemory(cpuState, cpuState->registers.programCounter);
             cpuState->registers.stackPointer = immediateValue;
+            cpuState->registers.programCounter += 2;
             break;
         }
         case 0x32: {
@@ -445,8 +447,7 @@ void executeNextOpcode(CpuState *cpuState) {
             pushRegisterPair(cpuState, registerHL);
             break;
         case 0xEA: {
-            unsigned short immediateValueAddress = cpuState->registers.programCounter + 1;
-            unsigned short address = readWordFromMemory(cpuState, immediateValueAddress);
+            unsigned short address = readWordFromMemory(cpuState, cpuState->registers.programCounter);
             loadSourceRegisterInMemory(cpuState, registerA, address);
             cpuState->registers.programCounter += 2;
             break;
@@ -493,8 +494,7 @@ void executeNextOpcode(CpuState *cpuState) {
             break;
         }
         case 0xFA: {
-            unsigned short immediateValueAddress = cpuState->registers.programCounter + 1;
-            unsigned short address = readWordFromMemory(cpuState, immediateValueAddress);
+            unsigned short address = readWordFromMemory(cpuState, cpuState->registers.programCounter);
             loadMemoryByteInDestinationRegister(cpuState, address, registerA);
             cpuState->registers.programCounter += 2;
             break;
@@ -524,8 +524,9 @@ void loadImmediateByteInMemory(CpuState *cpuState, unsigned short destinationAdd
 }
 
 void loadImmediateWordInRegisterPair(CpuState *cpuState, RegisterPair registerPairToLoad) {
-    unsigned short immediateValue = readWordFromMemory(cpuState, cpuState->registers.programCounter++);
+    unsigned short immediateValue = readWordFromMemory(cpuState, cpuState->registers.programCounter);
     storeInRegisterPair(cpuState, registerPairToLoad, immediateValue);
+    cpuState->registers.programCounter += 2;
 }
 
 void loadSourceRegisterInDestinationRegister(CpuState *cpuState, Register sourceRegister, Register destinationRegister) {

@@ -21,8 +21,8 @@ void storeByteInMemory(CpuState* cpuState, unsigned short address, unsigned char
 }
 
 void storeWordInMemory(CpuState* cpuState, unsigned short address, unsigned short word) {
-    writeByte(cpuState->memory, address, (word >> 8) & 0xFF);
-    writeByte(cpuState->memory, address + 1, word & 0xFF);
+    storeByteInMemory(cpuState, address, (word >> 8) & 0xFF);
+    storeByteInMemory(cpuState, address + 1, word & 0xFF);
 }
 
 unsigned char readFromRegister(CpuState* cpuState, Register registerToRead) {
