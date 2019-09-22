@@ -59,6 +59,8 @@ void dispatchLoop(CpuState *cpuState) {
 void executeNextOpcode(CpuState *cpuState) {
     unsigned char nextOpcode = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
 
+    printf("Executing opcode 0x%X...\n", nextOpcode);
+
     switch (nextOpcode) {
         case 0x00:
             break;
