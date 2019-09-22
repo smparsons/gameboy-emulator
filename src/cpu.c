@@ -540,7 +540,7 @@ void executeNextOpcode(CpuState *cpuState) {
             compareRegister(cpuState, registerA, readByteFromMemory(cpuState, cpuState->registers.programCounter++));
             break;
         default:
-            fprintf(stderr, "Opcode %d has not been implemented!\n", nextOpcode);
+            fprintf(stderr, "Opcode 0x%X has not been implemented!\n", nextOpcode);
             exit(EXIT_FAILURE);
     }
 
@@ -619,6 +619,6 @@ void popRegisterPair(CpuState *cpuState, RegisterPair registerPair) {
 }
 
 void handleIllegalOpcode(unsigned char opcode) {
-    fprintf(stderr, "Encountered illegal opcode %d!\n", opcode);
+    fprintf(stderr, "Encountered illegal opcode 0x%X!\n", opcode);
     exit(EXIT_FAILURE);
 }
