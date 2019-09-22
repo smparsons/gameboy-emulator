@@ -15,6 +15,8 @@ void loadMemoryByteInDestinationRegister(CpuState*, unsigned short, Register);
 void loadSourceRegisterInMemory(CpuState*, Register, unsigned short);
 void addToRegister(CpuState*, Register, unsigned char);
 void compareRegister(CpuState*, Register, unsigned char);
+bool getZFlag(CpuState*);
+bool getCFlag(CpuState*);
 void pushRegisterPair(CpuState*, RegisterPair);
 void popRegisterPair(CpuState*, RegisterPair);
 void handleIllegalOpcode(unsigned char);
@@ -108,6 +110,12 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0x1E:
             loadImmediateByteInRegister(cpuState, registerE);
             break;
+        case 0x20: {
+            char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
+            bool zFlag = getZFlag(cpuState);
+            if (!zFlag) cpuState->registers.programCounter += immediateValue;
+            break;
+        }
         case 0x21:
             loadImmediateWordInRegisterPair(cpuState, registerHL);
             break;
@@ -120,6 +128,12 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0x26:
             loadImmediateByteInRegister(cpuState, registerH);
             break;
+        case 0x28: {
+            char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
+            bool zFlag = getZFlag(cpuState);
+            if (zFlag) cpuState->registers.programCounter += immediateValue;
+            break;
+        }
         case 0x2A: {
             unsigned short address = readFromRegisterPair(cpuState, registerHL);
             loadMemoryByteInDestinationRegister(cpuState, address, registerA);
@@ -129,6 +143,12 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0x2E:
             loadImmediateByteInRegister(cpuState, registerL);
             break;
+        case 0x30: {
+            char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
+            bool cFlag = getCFlag(cpuState);
+            if (!cFlag) cpuState->registers.programCounter += immediateValue;
+            break;
+        }
         case 0x31: {
             unsigned short immediateValue = readWordFromMemory(cpuState, cpuState->registers.programCounter);
             cpuState->registers.stackPointer = immediateValue;
@@ -144,6 +164,12 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0x36: {
             unsigned short address = readFromRegisterPair(cpuState, registerHL);
             loadImmediateByteInMemory(cpuState, address);
+            break;
+        }
+        case 0x38: {
+            char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
+            bool cFlag = getCFlag(cpuState);
+            if (cFlag) cpuState->registers.programCounter += immediateValue;
             break;
         }
         case 0x3A: {
@@ -603,6 +629,14 @@ void compareRegister(CpuState *cpuState, Register sourceRegister, unsigned char 
     if (sourceRegisterValue < value) flagResult |= 0x10; // Flag C
 
     storeInRegister(cpuState, registerF, flagResult);
+}
+
+bool getZFlag(CpuState *cpuState) {
+    return (readFromRegister(cpuState, registerF) & 0x80) == 0x80;
+}
+
+bool getCFlag(CpuState *cpuState) {
+    return (readFromRegister(cpuState, registerF) & 0x10) == 0x10;
 }
 
 void pushRegisterPair(CpuState *cpuState, RegisterPair registerPair) {
