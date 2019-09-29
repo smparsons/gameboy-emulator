@@ -15,6 +15,7 @@ void loadMemoryByteInDestinationRegister(CpuState*, unsigned short, Register);
 void loadSourceRegisterInMemory(CpuState*, Register, unsigned short);
 void addToRegister(CpuState*, Register, unsigned char);
 void compareRegister(CpuState*, Register, unsigned char);
+void logicalAndWithRegister(CpuState*, Register, unsigned char);
 bool getZFlag(CpuState*);
 bool getCFlag(CpuState*);
 void pushRegisterPair(CpuState*, RegisterPair);
@@ -425,6 +426,33 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0x87:
             addToRegister(cpuState, registerA, readFromRegister(cpuState, registerA));
             break;
+        case 0xA0:
+            logicalAndWithRegister(cpuState, registerA, readFromRegister(cpuState, registerB));
+            break;
+        case 0xA1:
+            logicalAndWithRegister(cpuState, registerA, readFromRegister(cpuState, registerC));
+            break;
+        case 0xA2:
+            logicalAndWithRegister(cpuState, registerA, readFromRegister(cpuState, registerD));
+            break;
+        case 0xA3:
+            logicalAndWithRegister(cpuState, registerA, readFromRegister(cpuState, registerE));
+            break;
+        case 0xA4:
+            logicalAndWithRegister(cpuState, registerA, readFromRegister(cpuState, registerH));
+            break;
+        case 0xA5:
+            logicalAndWithRegister(cpuState, registerA, readFromRegister(cpuState, registerL));
+            break;
+        case 0xA6: {
+            unsigned short address = readFromRegisterPair(cpuState, registerHL);
+            unsigned char value = readByteFromMemory(cpuState, address);
+            logicalAndWithRegister(cpuState, registerA, value);
+            break;
+        }
+        case 0xA7:
+            logicalAndWithRegister(cpuState, registerA, readFromRegister(cpuState, registerA));
+            break;
         case 0xB8:
             compareRegister(cpuState, registerA, readFromRegister(cpuState, registerB));
             break;
@@ -505,6 +533,10 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0xE5:
             pushRegisterPair(cpuState, registerHL);
             break;
+        case 0xE6: {
+            unsigned char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
+            logicalAndWithRegister(cpuState, registerA, immediateValue);
+        }
         case 0xEA: {
             unsigned short address = readWordFromMemory(cpuState, cpuState->registers.programCounter);
             loadSourceRegisterInMemory(cpuState, registerA, address);
@@ -628,6 +660,18 @@ void compareRegister(CpuState *cpuState, Register sourceRegister, unsigned char 
     if ((sourceRegisterValue & 0x0F) < (value & 0x0F)) flagResult |= 0x20; // Flag H
     if (sourceRegisterValue < value) flagResult |= 0x10; // Flag C
 
+    storeInRegister(cpuState, registerF, flagResult);
+}
+
+void logicalAndWithRegister(CpuState *cpuState, Register sourceRegister, unsigned char value) {
+    unsigned char sourceRegisterValue = readFromRegister(cpuState, sourceRegister);
+    unsigned char result = (sourceRegisterValue & value);
+
+    unsigned char flagResult = 0;
+    if (result == 0) flagResult |= 0x80; // Flag Z
+    flagResult |= 0x20; // Flag H
+
+    storeInRegister(cpuState, sourceRegister, result);
     storeInRegister(cpuState, registerF, flagResult);
 }
 
