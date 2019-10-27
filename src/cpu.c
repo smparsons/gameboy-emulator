@@ -14,6 +14,7 @@ void loadSourceRegisterInDestinationRegister(CpuState*, Register, Register);
 void loadMemoryByteInDestinationRegister(CpuState*, unsigned short, Register);
 void loadSourceRegisterInMemory(CpuState*, Register, unsigned short);
 void addToRegister(CpuState*, Register, unsigned char);
+void addToRegisterPair(CpuState*, RegisterPair, unsigned short);
 void compareRegister(CpuState*, Register, unsigned char);
 void logicalAndWithRegister(CpuState*, Register, unsigned char);
 void decrementRegister(CpuState*, Register);
@@ -89,6 +90,9 @@ void executeNextOpcode(CpuState *cpuState) {
             cpuState->registers.programCounter += 2;
             break;
         }
+        case 0x09:
+            addToRegisterPair(cpuState, registerHL, readFromRegisterPair(cpuState, registerBC));
+            break;
         case 0x0A: {
             unsigned short address = readFromRegisterPair(cpuState, registerBC);
             loadMemoryByteInDestinationRegister(cpuState, address, registerA);
@@ -119,6 +123,9 @@ void executeNextOpcode(CpuState *cpuState) {
             cpuState->registers.programCounter += immediateValue;
             break;
         }
+        case 0x19:
+            addToRegisterPair(cpuState, registerHL, readFromRegisterPair(cpuState, registerDE));
+            break;
         case 0x1A: {
             unsigned short address = readFromRegisterPair(cpuState, registerDE);
             loadMemoryByteInDestinationRegister(cpuState, address, registerA);
@@ -157,6 +164,9 @@ void executeNextOpcode(CpuState *cpuState) {
             if (zFlag) cpuState->registers.programCounter += immediateValue;
             break;
         }
+        case 0x29:
+            addToRegisterPair(cpuState, registerHL, readFromRegisterPair(cpuState, registerHL));
+            break;
         case 0x2A: {
             unsigned short address = readFromRegisterPair(cpuState, registerHL);
             loadMemoryByteInDestinationRegister(cpuState, address, registerA);
@@ -201,6 +211,9 @@ void executeNextOpcode(CpuState *cpuState) {
             if (cFlag) cpuState->registers.programCounter += immediateValue;
             break;
         }
+        case 0x39:
+            addToRegisterPair(cpuState, registerHL, cpuState->registers.stackPointer);
+            break;
         case 0x3A: {
             unsigned short address = readFromRegisterPair(cpuState, registerHL);
             loadMemoryByteInDestinationRegister(cpuState, address, registerA);
@@ -679,6 +692,18 @@ void addToRegister(CpuState *cpuState, Register sourceRegister, unsigned char va
     if (sourceRegisterValue + value > 0xFF) flagResult |= 0x10; // Flag C
 
     storeInRegister(cpuState, sourceRegister, result);
+    storeInRegister(cpuState, registerF, flagResult);
+}
+
+void addToRegisterPair(CpuState *cpuState, RegisterPair sourceRegisterPair, unsigned short value) {
+    unsigned short sourceRegisterPairValue = readFromRegisterPair(cpuState, sourceRegisterPair);
+    unsigned short result = (sourceRegisterPairValue + value) & 0xFFFF;
+
+    unsigned char flagResult = 0;
+    if ((sourceRegisterPairValue & 0xFFF) + (value & 0xFFF) > 0xFFF) flagResult |= 0x20;// Flag H
+    if (sourceRegisterPairValue + value > 0xFFFF) flagResult |= 0x10; // Flag C
+
+    storeInRegisterPair(cpuState, sourceRegisterPair, result);
     storeInRegister(cpuState, registerF, flagResult);
 }
 
