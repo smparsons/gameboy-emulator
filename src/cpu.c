@@ -17,6 +17,8 @@ void addToRegister(CpuState*, Register, unsigned char);
 void addToRegisterPair(CpuState*, RegisterPair, unsigned short);
 void compareRegister(CpuState*, Register, unsigned char);
 void logicalAndWithRegister(CpuState*, Register, unsigned char);
+void logicalOrWithRegister(CpuState*, Register, unsigned char);
+void logicalExclusiveOrWithRegister(CpuState*, Register, unsigned char);
 void decrementRegister(CpuState*, Register);
 void decrementMemoryByte(CpuState*, RegisterPair);
 bool getZFlag(CpuState*);
@@ -498,6 +500,60 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0xA7:
             logicalAndWithRegister(cpuState, registerA, readFromRegister(cpuState, registerA));
             break;
+        case 0xA8:
+            logicalExclusiveOrWithRegister(cpuState, registerA, readFromRegister(cpuState, registerB));
+            break;
+        case 0xA9:
+            logicalExclusiveOrWithRegister(cpuState, registerA, readFromRegister(cpuState, registerC));
+            break;
+        case 0xAA:
+            logicalExclusiveOrWithRegister(cpuState, registerA, readFromRegister(cpuState, registerD));
+            break;
+        case 0xAB:
+            logicalExclusiveOrWithRegister(cpuState, registerA, readFromRegister(cpuState, registerE));
+            break;
+        case 0xAC:
+            logicalExclusiveOrWithRegister(cpuState, registerA, readFromRegister(cpuState, registerH));
+            break;
+        case 0xAD:
+            logicalExclusiveOrWithRegister(cpuState, registerA, readFromRegister(cpuState, registerL));
+            break;
+        case 0xAE: {
+            unsigned short address = readFromRegisterPair(cpuState, registerHL);
+            unsigned char value = readByteFromMemory(cpuState, address);
+            logicalExclusiveOrWithRegister(cpuState, registerA, value);
+            break;
+        }
+        case 0xAF:
+            logicalExclusiveOrWithRegister(cpuState, registerA, readFromRegister(cpuState, registerA));
+            break;
+        case 0xB0:
+            logicalOrWithRegister(cpuState, registerA, readFromRegister(cpuState, registerB));
+            break;
+        case 0xB1:
+            logicalOrWithRegister(cpuState, registerA, readFromRegister(cpuState, registerC));
+            break;
+        case 0xB2:
+            logicalOrWithRegister(cpuState, registerA, readFromRegister(cpuState, registerD));
+            break;
+        case 0xB3:
+            logicalOrWithRegister(cpuState, registerA, readFromRegister(cpuState, registerE));
+            break;
+        case 0xB4:
+            logicalOrWithRegister(cpuState, registerA, readFromRegister(cpuState, registerH));
+            break;
+        case 0xB5:
+            logicalOrWithRegister(cpuState, registerA, readFromRegister(cpuState, registerL));
+            break;
+        case 0xB6: {
+            unsigned short address = readFromRegisterPair(cpuState, registerHL);
+            unsigned char value = readByteFromMemory(cpuState, address);
+            logicalOrWithRegister(cpuState, registerA, value);
+            break;
+        }
+        case 0xB7:
+            logicalOrWithRegister(cpuState, registerA, readFromRegister(cpuState, registerA));
+            break;
         case 0xB8:
             compareRegister(cpuState, registerA, readFromRegister(cpuState, registerB));
             break;
@@ -584,6 +640,7 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0xE6: {
             unsigned char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
             logicalAndWithRegister(cpuState, registerA, immediateValue);
+            break;
         }
         case 0xEA: {
             unsigned short address = readWordFromMemory(cpuState, cpuState->registers.programCounter);
@@ -600,6 +657,11 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0xED:
             handleIllegalOpcode(nextOpcode);
             break;
+        case 0xEE: {
+            unsigned char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
+            logicalExclusiveOrWithRegister(cpuState, registerA, immediateValue);
+            break;
+        }
         case 0xF0: {
             unsigned char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
             loadMemoryByteInDestinationRegister(cpuState, 0xFF00 + immediateValue, registerA);
@@ -619,6 +681,11 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0xF5:
             pushRegisterPair(cpuState, registerAF);
             break;
+        case 0xF6: {
+            unsigned char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
+            logicalOrWithRegister(cpuState, registerA, immediateValue);
+            break;
+        }
         case 0xF8: {
             unsigned char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
             unsigned short valueToStore = cpuState->registers.stackPointer + immediateValue;        
@@ -730,6 +797,28 @@ void logicalAndWithRegister(CpuState *cpuState, Register sourceRegister, unsigne
     unsigned char flagResult = 0;
     if (result == 0) flagResult |= 0x80; // Flag Z
     flagResult |= 0x20; // Flag H
+
+    storeInRegister(cpuState, sourceRegister, result);
+    storeInRegister(cpuState, registerF, flagResult);
+}
+
+void logicalOrWithRegister(CpuState *cpuState, Register sourceRegister, unsigned char value) {
+    unsigned char sourceRegisterValue = readFromRegister(cpuState, sourceRegister);
+    unsigned char result = (sourceRegisterValue | value);
+
+    unsigned char flagResult = 0;
+    if (result == 0) flagResult |= 0x80; //Flag Z
+
+    storeInRegister(cpuState, sourceRegister, result);
+    storeInRegister(cpuState, registerF, flagResult);
+}
+
+void logicalExclusiveOrWithRegister(CpuState *cpuState, Register sourceRegister, unsigned char value) {
+    unsigned char sourceRegisterValue = readFromRegister(cpuState, sourceRegister);
+    unsigned char result = (sourceRegisterValue ^ value);
+
+    unsigned char flagResult = 0;
+    if (result == 0) flagResult |= 0x80; //Flag Z
 
     storeInRegister(cpuState, sourceRegister, result);
     storeInRegister(cpuState, registerF, flagResult);
