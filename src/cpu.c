@@ -26,6 +26,7 @@ bool getCFlag(CpuState*);
 void pushRegisterPair(CpuState*, RegisterPair);
 void popRegisterPair(CpuState*, RegisterPair);
 void stackReturn(CpuState*);
+void restart(CpuState*, unsigned short);
 void handleIllegalOpcode(unsigned char);
 
 const RegisterPair registerAF = { .first = registerA, .second = registerF };
@@ -595,8 +596,14 @@ void executeNextOpcode(CpuState *cpuState) {
             addToRegister(cpuState, registerA, immediateValue);
             break;
         }
+        case 0xC7:
+            restart(cpuState, 0x00);
+            break;
         case 0xC9:
             stackReturn(cpuState);
+            break;
+        case 0xCF:
+            restart(cpuState, 0x08);
             break;
         case 0xD1:
             popRegisterPair(cpuState, registerDE);
@@ -607,11 +614,17 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0xD5:
             pushRegisterPair(cpuState, registerDE);
             break;
+        case 0xD7:
+            restart(cpuState, 0x10);
+            break;
         case 0xDB:
             handleIllegalOpcode(nextOpcode);
             break;
         case 0xDD:
             handleIllegalOpcode(nextOpcode);
+            break;
+        case 0xDF:
+            restart(cpuState, 0x18);
             break;
         case 0xE0: {
             unsigned char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
@@ -642,6 +655,9 @@ void executeNextOpcode(CpuState *cpuState) {
             logicalAndWithRegister(cpuState, registerA, immediateValue);
             break;
         }
+        case 0xE7:
+            restart(cpuState, 0x20);
+            break;
         case 0xEA: {
             unsigned short address = readWordFromMemory(cpuState, cpuState->registers.programCounter);
             loadSourceRegisterInMemory(cpuState, registerA, address);
@@ -662,6 +678,9 @@ void executeNextOpcode(CpuState *cpuState) {
             logicalExclusiveOrWithRegister(cpuState, registerA, immediateValue);
             break;
         }
+        case 0xEF:
+            restart(cpuState, 0x28);
+            break;
         case 0xF0: {
             unsigned char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
             loadMemoryByteInDestinationRegister(cpuState, 0xFF00 + immediateValue, registerA);
@@ -686,6 +705,9 @@ void executeNextOpcode(CpuState *cpuState) {
             logicalOrWithRegister(cpuState, registerA, immediateValue);
             break;
         }
+        case 0xF7:
+            restart(cpuState, 0x30);
+            break;
         case 0xF8: {
             unsigned char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
             unsigned short valueToStore = cpuState->registers.stackPointer + immediateValue;        
@@ -713,6 +735,9 @@ void executeNextOpcode(CpuState *cpuState) {
             break;
         case 0xFE:
             compareRegister(cpuState, registerA, readByteFromMemory(cpuState, cpuState->registers.programCounter++));
+            break;
+        case 0xFF:
+            restart(cpuState, 0x38);
             break;
         default:
             fprintf(stderr, "Opcode 0x%X has not been implemented!\n", nextOpcode);
@@ -877,6 +902,12 @@ void popRegisterPair(CpuState *cpuState, RegisterPair registerPair) {
 void stackReturn(CpuState *cpuState) {
     cpuState->registers.programCounter = readWordFromMemory(cpuState, cpuState->registers.stackPointer);
     cpuState->registers.stackPointer += 2;
+}
+
+void restart(CpuState *cpuState, unsigned short newAddress) {
+    cpuState->registers.stackPointer -= 2;
+    storeWordInMemory(cpuState, cpuState->registers.stackPointer, cpuState->registers.programCounter);
+    cpuState->registers.programCounter = newAddress;
 }
 
 void handleIllegalOpcode(unsigned char opcode) {
