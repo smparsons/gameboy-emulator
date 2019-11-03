@@ -23,6 +23,7 @@ bool getZFlag(CpuState*);
 bool getCFlag(CpuState*);
 void pushRegisterPair(CpuState*, RegisterPair);
 void popRegisterPair(CpuState*, RegisterPair);
+void stackReturn(CpuState*);
 void handleIllegalOpcode(unsigned char);
 
 const RegisterPair registerAF = { .first = registerA, .second = registerF };
@@ -538,6 +539,9 @@ void executeNextOpcode(CpuState *cpuState) {
             addToRegister(cpuState, registerA, immediateValue);
             break;
         }
+        case 0xC9:
+            stackReturn(cpuState);
+            break;
         case 0xD1:
             popRegisterPair(cpuState, registerDE);
             break;
@@ -779,6 +783,11 @@ void popRegisterPair(CpuState *cpuState, RegisterPair registerPair) {
     cpuState->registers.stackPointer++;
     loadMemoryByteInDestinationRegister(cpuState, cpuState->registers.stackPointer, registerPair.first);
     cpuState->registers.stackPointer++;
+}
+
+void stackReturn(CpuState *cpuState) {
+    cpuState->registers.programCounter = readWordFromMemory(cpuState, cpuState->registers.stackPointer);
+    cpuState->registers.stackPointer += 2;
 }
 
 void handleIllegalOpcode(unsigned char opcode) {
