@@ -19,6 +19,6 @@ typedef struct CpuState
 } CpuState;
 
 CpuState initializeCpu(char*);
-void dispatchLoop(CpuState*);
+void executeNextOpcode(CpuState*);
 
 #endif

@@ -6,7 +6,6 @@
 #include "mmu.h"
 #include "microops.h"
 
-void executeNextOpcode(CpuState*);
 void loadImmediateByteInRegister(CpuState*, Register);
 void loadImmediateByteInMemory(CpuState*, unsigned short);
 void loadImmediateWordInRegisterPair(CpuState*, RegisterPair);
@@ -61,16 +60,10 @@ CpuState initializeCpu(char *romPath) {
     return cpuState;
 }
 
-void dispatchLoop(CpuState *cpuState) {
-    while (true) {
-        executeNextOpcode(cpuState);
-    }
-}
-
 void executeNextOpcode(CpuState *cpuState) {
     unsigned char nextOpcode = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
 
-    printf("Executing opcode 0x%X...\n", nextOpcode);
+    printf("CPU: Executing opcode 0x%X...\n", nextOpcode);
 
     switch (nextOpcode) {
         case 0x00:
