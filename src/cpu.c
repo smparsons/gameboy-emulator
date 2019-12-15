@@ -19,6 +19,8 @@ void compareRegister(CpuState*, Register, unsigned char);
 void logicalAndWithRegister(CpuState*, Register, unsigned char);
 void logicalOrWithRegister(CpuState*, Register, unsigned char);
 void logicalExclusiveOrWithRegister(CpuState*, Register, unsigned char);
+void incrementRegister(CpuState*, Register);
+void incrementMemoryByte(CpuState*, RegisterPair);
 void decrementRegister(CpuState*, Register);
 void decrementMemoryByte(CpuState*, RegisterPair);
 bool getZFlag(CpuState*);
@@ -76,6 +78,9 @@ void executeNextOpcode(CpuState *cpuState) {
             loadSourceRegisterInMemory(cpuState, registerA, address);
             break;
         }
+        case 0x04:
+            incrementRegister(cpuState, registerB);
+            break;
         case 0x05:
             decrementRegister(cpuState, registerB);
             break;
@@ -96,6 +101,9 @@ void executeNextOpcode(CpuState *cpuState) {
             loadMemoryByteInDestinationRegister(cpuState, address, registerA);
             break;
         }
+        case 0x0C:
+            incrementRegister(cpuState, registerC);
+            break;
         case 0x0D:
             decrementRegister(cpuState, registerC);
             break;
@@ -110,6 +118,9 @@ void executeNextOpcode(CpuState *cpuState) {
             loadSourceRegisterInMemory(cpuState, registerA, address);
             break;
         }
+        case 0x14:
+            incrementRegister(cpuState, registerD);
+            break;
         case 0x15:
             decrementRegister(cpuState, registerD);
             break;
@@ -129,6 +140,9 @@ void executeNextOpcode(CpuState *cpuState) {
             loadMemoryByteInDestinationRegister(cpuState, address, registerA);
             break;
         }
+        case 0x1C:
+            incrementRegister(cpuState, registerE);
+            break;
         case 0x1D:
             decrementRegister(cpuState, registerE);
             break;
@@ -150,6 +164,9 @@ void executeNextOpcode(CpuState *cpuState) {
             storeInRegisterPair(cpuState, registerHL, address++);
             break;
         }
+        case 0x24:
+            incrementRegister(cpuState, registerH);
+            break;
         case 0x25:
             decrementRegister(cpuState, registerH);
             break;
@@ -171,6 +188,9 @@ void executeNextOpcode(CpuState *cpuState) {
             storeInRegisterPair(cpuState, registerHL, address++);
             break;
         }
+        case 0x2C:
+            incrementRegister(cpuState, registerL);
+            break;        
         case 0x2D:
             decrementRegister(cpuState, registerL);
             break;
@@ -195,6 +215,9 @@ void executeNextOpcode(CpuState *cpuState) {
             storeInRegisterPair(cpuState, registerHL, address--);
             break;
         }
+        case 0x34:
+            incrementMemoryByte(cpuState, registerHL);
+            break;
         case 0x35:
             decrementMemoryByte(cpuState, registerHL);
             break;
@@ -218,6 +241,9 @@ void executeNextOpcode(CpuState *cpuState) {
             storeInRegisterPair(cpuState, registerHL, address--);
             break;
         }
+        case 0x3C:
+            incrementRegister(cpuState, registerA);
+            break;
         case 0x3D:
             decrementRegister(cpuState, registerA);
             break;
@@ -878,6 +904,31 @@ void logicalExclusiveOrWithRegister(CpuState *cpuState, Register sourceRegister,
     if (result == 0) flagResult |= 0x80; //Flag Z
 
     storeInRegister(cpuState, sourceRegister, result);
+    storeInRegister(cpuState, registerF, flagResult);
+}
+
+void incrementRegister(CpuState *cpuState, Register sourceRegister) {
+    unsigned char sourceRegisterValue = readFromRegister(cpuState, sourceRegister);
+    unsigned char result = (sourceRegisterValue + 1) & 0xFF;
+
+    unsigned char flagResult = 0;
+    if (result == 0) flagResult |= 0x80; // Flag Z
+    if ((sourceRegisterValue & 0x0F) + 1 > 0x0F) flagResult |= 0x20; // Flag H
+
+    storeInRegister(cpuState, sourceRegister, result);
+    storeInRegister(cpuState, registerF, flagResult);
+}
+
+void incrementMemoryByte(CpuState *cpuState, RegisterPair registerPair) {
+    unsigned short address = readFromRegisterPair(cpuState, registerPair);
+    unsigned char memoryValue = readByteFromMemory(cpuState, address);
+    unsigned char result = (memoryValue + 1) & 0xFF;
+
+    unsigned char flagResult = 0;
+    if (result == 0) flagResult |= 0x80; // Flag Z
+    if ((memoryValue & 0x0F) + 1 > 0x0F) flagResult |= 0x20; // Flag H
+
+    storeByteInMemory(cpuState, address, result);
     storeInRegister(cpuState, registerF, flagResult);
 }
 
