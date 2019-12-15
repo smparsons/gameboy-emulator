@@ -20,8 +20,10 @@ void logicalAndWithRegister(CpuState*, Register, unsigned char);
 void logicalOrWithRegister(CpuState*, Register, unsigned char);
 void logicalExclusiveOrWithRegister(CpuState*, Register, unsigned char);
 void incrementRegister(CpuState*, Register);
+void incrementRegisterPair(CpuState*, RegisterPair);
 void incrementMemoryByte(CpuState*, RegisterPair);
 void decrementRegister(CpuState*, Register);
+void decrementRegisterPair(CpuState*, RegisterPair);
 void decrementMemoryByte(CpuState*, RegisterPair);
 bool getZFlag(CpuState*);
 bool getCFlag(CpuState*);
@@ -78,6 +80,9 @@ void executeNextOpcode(CpuState *cpuState) {
             loadSourceRegisterInMemory(cpuState, registerA, address);
             break;
         }
+        case 0x03:
+            incrementRegisterPair(cpuState, registerBC);
+            break;
         case 0x04:
             incrementRegister(cpuState, registerB);
             break;
@@ -101,6 +106,9 @@ void executeNextOpcode(CpuState *cpuState) {
             loadMemoryByteInDestinationRegister(cpuState, address, registerA);
             break;
         }
+        case 0x0B:
+            decrementRegisterPair(cpuState, registerBC);
+            break;
         case 0x0C:
             incrementRegister(cpuState, registerC);
             break;
@@ -118,6 +126,9 @@ void executeNextOpcode(CpuState *cpuState) {
             loadSourceRegisterInMemory(cpuState, registerA, address);
             break;
         }
+        case 0x13:
+            incrementRegisterPair(cpuState, registerDE);
+            break;
         case 0x14:
             incrementRegister(cpuState, registerD);
             break;
@@ -140,6 +151,9 @@ void executeNextOpcode(CpuState *cpuState) {
             loadMemoryByteInDestinationRegister(cpuState, address, registerA);
             break;
         }
+        case 0x1B:
+            decrementRegisterPair(cpuState, registerDE);
+            break;
         case 0x1C:
             incrementRegister(cpuState, registerE);
             break;
@@ -164,6 +178,9 @@ void executeNextOpcode(CpuState *cpuState) {
             storeInRegisterPair(cpuState, registerHL, address++);
             break;
         }
+        case 0x23:
+            incrementRegisterPair(cpuState, registerHL);
+            break;
         case 0x24:
             incrementRegister(cpuState, registerH);
             break;
@@ -188,6 +205,9 @@ void executeNextOpcode(CpuState *cpuState) {
             storeInRegisterPair(cpuState, registerHL, address++);
             break;
         }
+        case 0x2B:
+            decrementRegisterPair(cpuState, registerHL);
+            break;
         case 0x2C:
             incrementRegister(cpuState, registerL);
             break;        
@@ -215,6 +235,9 @@ void executeNextOpcode(CpuState *cpuState) {
             storeInRegisterPair(cpuState, registerHL, address--);
             break;
         }
+        case 0x33:
+            cpuState->registers.stackPointer++;
+            break;
         case 0x34:
             incrementMemoryByte(cpuState, registerHL);
             break;
@@ -241,6 +264,9 @@ void executeNextOpcode(CpuState *cpuState) {
             storeInRegisterPair(cpuState, registerHL, address--);
             break;
         }
+        case 0x3B:
+            cpuState->registers.stackPointer--;
+            break;
         case 0x3C:
             incrementRegister(cpuState, registerA);
             break;
@@ -710,6 +736,11 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0xE7:
             restart(cpuState, 0x20);
             break;
+        case 0xE8: {
+            char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
+            cpuState->registers.stackPointer += immediateValue;
+            break;
+        }
         case 0xEA: {
             unsigned short address = readWordFromMemory(cpuState, cpuState->registers.programCounter);
             loadSourceRegisterInMemory(cpuState, registerA, address);
@@ -761,7 +792,7 @@ void executeNextOpcode(CpuState *cpuState) {
             restart(cpuState, 0x30);
             break;
         case 0xF8: {
-            unsigned char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
+            char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
             unsigned short valueToStore = cpuState->registers.stackPointer + immediateValue;        
             storeInRegisterPair(cpuState, registerHL, valueToStore);
             runExtraMachineCycle(cpuState);
@@ -919,6 +950,12 @@ void incrementRegister(CpuState *cpuState, Register sourceRegister) {
     storeInRegister(cpuState, registerF, flagResult);
 }
 
+void incrementRegisterPair(CpuState *cpuState, RegisterPair sourceRegisterPair) {
+    unsigned short sourceRegisterPairValue = readFromRegisterPair(cpuState, sourceRegisterPair);
+    unsigned short result = (sourceRegisterPairValue + 1) & 0xFFFF;
+    storeInRegisterPair(cpuState, sourceRegisterPair, result);
+}
+
 void incrementMemoryByte(CpuState *cpuState, RegisterPair registerPair) {
     unsigned short address = readFromRegisterPair(cpuState, registerPair);
     unsigned char memoryValue = readByteFromMemory(cpuState, address);
@@ -943,6 +980,12 @@ void decrementRegister(CpuState *cpuState, Register sourceRegister) {
 
     storeInRegister(cpuState, sourceRegister, result);
     storeInRegister(cpuState, registerF, flagResult);
+}
+
+void decrementRegisterPair(CpuState *cpuState, RegisterPair sourceRegisterPair) {
+    unsigned short sourceRegisterPairValue = readFromRegisterPair(cpuState, sourceRegisterPair);
+    unsigned short result = (sourceRegisterPairValue - 1) & 0xFFFF;
+    storeInRegisterPair(cpuState, sourceRegisterPair, result);
 }
 
 void decrementMemoryByte(CpuState *cpuState, RegisterPair registerPair) {
