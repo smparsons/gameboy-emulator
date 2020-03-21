@@ -16,6 +16,8 @@ void addToRegister(CpuState*, Register, unsigned char);
 void addToRegisterWithCarry(CpuState*, Register, unsigned char);
 void addToRegisterPair(CpuState*, RegisterPair, unsigned short);
 void compareRegister(CpuState*, Register, unsigned char);
+void subtractFromRegister(CpuState*, Register, unsigned char);
+void subtractFromRegisterWithCarry(CpuState*, Register, unsigned char);
 void logicalAndWithRegister(CpuState*, Register, unsigned char);
 void logicalOrWithRegister(CpuState*, Register, unsigned char);
 void logicalExclusiveOrWithRegister(CpuState*, Register, unsigned char);
@@ -547,6 +549,60 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0x8F:
             addToRegisterWithCarry(cpuState, registerA, readFromRegister(cpuState, registerA));
             break;
+        case 0x90:
+            subtractFromRegister(cpuState, registerA, readFromRegister(cpuState, registerB));
+            break;
+        case 0x91:
+            subtractFromRegister(cpuState, registerA, readFromRegister(cpuState, registerC));
+            break;
+        case 0x92:
+            subtractFromRegister(cpuState, registerA, readFromRegister(cpuState, registerD));
+            break;
+        case 0x93:
+            subtractFromRegister(cpuState, registerA, readFromRegister(cpuState, registerE));
+            break;
+        case 0x94:
+            subtractFromRegister(cpuState, registerA, readFromRegister(cpuState, registerH));
+            break;
+        case 0x95:
+            subtractFromRegister(cpuState, registerA, readFromRegister(cpuState, registerL));
+            break;
+        case 0x96: {
+            unsigned short address = readFromRegisterPair(cpuState, registerHL);
+            unsigned char value = readByteFromMemory(cpuState, address);
+            subtractFromRegister(cpuState, registerA, value);
+            break;
+        }
+        case 0x97:
+            subtractFromRegister(cpuState, registerA, readFromRegister(cpuState, registerA));
+            break;
+        case 0x98:
+            subtractFromRegisterWithCarry(cpuState, registerA, readFromRegister(cpuState, registerB));
+            break;
+        case 0x99:
+            subtractFromRegisterWithCarry(cpuState, registerA, readFromRegister(cpuState, registerC));
+            break;
+        case 0x9A:
+            subtractFromRegisterWithCarry(cpuState, registerA, readFromRegister(cpuState, registerD));
+            break;
+        case 0x9B:
+            subtractFromRegisterWithCarry(cpuState, registerA, readFromRegister(cpuState, registerE));
+            break;
+        case 0x9C:
+            subtractFromRegisterWithCarry(cpuState, registerA, readFromRegister(cpuState, registerH));
+            break;
+        case 0x9D:
+            subtractFromRegisterWithCarry(cpuState, registerA, readFromRegister(cpuState, registerL));
+            break;
+        case 0x9E: {
+            unsigned short address = readFromRegisterPair(cpuState, registerHL);
+            unsigned char value = readByteFromMemory(cpuState, address);
+            subtractFromRegisterWithCarry(cpuState, registerA, value);
+            break;
+        }
+        case 0x9F:
+            subtractFromRegisterWithCarry(cpuState, registerA, readFromRegister(cpuState, registerA));
+            break;
         case 0xA0:
             logicalAndWithRegister(cpuState, registerA, readFromRegister(cpuState, registerB));
             break;
@@ -692,6 +748,11 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0xD5:
             pushRegisterPair(cpuState, registerDE);
             break;
+        case 0xD6: {
+            unsigned char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
+            subtractFromRegister(cpuState, registerA, immediateValue);
+            break;
+        }
         case 0xD7:
             restart(cpuState, 0x10);
             break;
@@ -902,6 +963,26 @@ void compareRegister(CpuState *cpuState, Register sourceRegister, unsigned char 
     if (sourceRegisterValue < value) flagResult |= 0x10; // Flag C
 
     storeInRegister(cpuState, registerF, flagResult);
+}
+
+void subtractFromRegister(CpuState *cpuState, Register sourceRegister, unsigned char value) {
+    unsigned char sourceRegisterValue = readFromRegister(cpuState, sourceRegister);
+    unsigned char result = (sourceRegisterValue - value) & 0xFF;
+
+    unsigned char flagResult = 0;
+    if (sourceRegisterValue == value) flagResult |= 0x80; // Flag Z
+    flagResult |= 0x40; // Flag N
+    if ((sourceRegisterValue & 0x0F) < (value & 0x0F)) flagResult |= 0x20; // Flag H
+    if (sourceRegisterValue < value) flagResult |= 0x10; // Flag C
+
+    storeInRegister(cpuState, sourceRegister, result);
+    storeInRegister(cpuState, registerF, flagResult);
+}
+
+void subtractFromRegisterWithCarry(CpuState *cpuState, Register sourceRegister, unsigned char value) {
+    bool isCarryFlagSet = getCFlag(cpuState);
+    unsigned char carry = isCarryFlagSet ? 1 : 0;
+    subtractFromRegister(cpuState, sourceRegister, value + carry);
 }
 
 void logicalAndWithRegister(CpuState *cpuState, Register sourceRegister, unsigned char value) {
