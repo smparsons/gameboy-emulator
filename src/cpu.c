@@ -7,6 +7,7 @@
 #include "microops.h"
 #include "alu.h"
 
+void executeNextCBOpcode(CpuState*);
 void loadImmediateByteInRegister(CpuState*, Register);
 void loadImmediateByteInMemory(CpuState*, unsigned short);
 void loadImmediateWordInRegisterPair(CpuState*, RegisterPair);
@@ -715,6 +716,9 @@ void executeNextOpcode(CpuState *cpuState) {
         case 0xC9:
             stackReturn(cpuState);
             break;
+        case 0xCB:
+            executeNextCBOpcode(cpuState);
+            break;
         case 0xCE: {
             unsigned char immediateValue = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
             addToRegisterWithCarry(cpuState, registerA, immediateValue);
@@ -870,6 +874,19 @@ void executeNextOpcode(CpuState *cpuState) {
         default:
             fprintf(stderr, "Opcode 0x%X has not been implemented!\n", nextOpcode);
             exit(EXIT_FAILURE);
+    }
+
+    cpuState->registers.programCounter &= 0xFFFF;
+}
+
+void executeNextCBOpcode(CpuState* cpuState) {
+    unsigned char nextOpcode = readByteFromMemory(cpuState, cpuState->registers.programCounter++);
+
+    printf("CPU: Executing CB opcode 0x%X...\n", nextOpcode);
+
+    switch (nextOpcode) {
+        default:
+            fprintf(stderr, "CB Opcode 0x%X has not been implemented!\n", nextOpcode);
     }
 
     cpuState->registers.programCounter &= 0xFFFF;
