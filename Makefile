@@ -5,4 +5,5 @@ compile :
 	gcc src/emulator.c -o emulator.o -c
 	gcc src/microops.c -o microops.o -c
 	gcc src/gpu.c -o gpu.o -c
-	gcc -o gbemu main.o mmu.o cpu.o emulator.o microops.o gpu.o
+	gcc src/alu.c -o alu.o -c
+	gcc -o gbemu main.o mmu.o cpu.o emulator.o microops.o gpu.o alu.o
