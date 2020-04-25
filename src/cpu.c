@@ -19,6 +19,9 @@ void popRegisterPair(CpuState*, RegisterPair);
 void stackReturn(CpuState*);
 void restart(CpuState*, unsigned short);
 void handleIllegalOpcode(unsigned char);
+void swapNibblesInRegister(CpuState*, Register);
+void swapNibblesInMemoryByte(CpuState*, RegisterPair);
+unsigned char swapNibbles(unsigned char givenByte);
 
 const RegisterPair registerAF = { .first = registerA, .second = registerF };
 const RegisterPair registerBC = { .first = registerB, .second = registerC };
@@ -885,6 +888,30 @@ void executeNextCBOpcode(CpuState* cpuState) {
     printf("CPU: Executing CB opcode 0x%X...\n", nextOpcode);
 
     switch (nextOpcode) {
+        case 0x30:
+            swapNibblesInRegister(cpuState, registerB);
+            break;
+        case 0x31:
+            swapNibblesInRegister(cpuState, registerC);
+            break;
+        case 0x32:
+            swapNibblesInRegister(cpuState, registerD);
+            break;
+        case 0x33:
+            swapNibblesInRegister(cpuState, registerE);
+            break;
+        case 0x34:
+            swapNibblesInRegister(cpuState, registerH);
+            break;
+        case 0x35:
+            swapNibblesInRegister(cpuState, registerL);
+            break;
+        case 0x36:
+            swapNibblesInMemoryByte(cpuState, registerHL);
+            break;
+        case 0x37:
+            swapNibblesInRegister(cpuState, registerA);
+            break;
         default:
             fprintf(stderr, "CB Opcode 0x%X has not been implemented!\n", nextOpcode);
     }
@@ -952,4 +979,33 @@ void restart(CpuState *cpuState, unsigned short newAddress) {
 void handleIllegalOpcode(unsigned char opcode) {
     fprintf(stderr, "Encountered illegal opcode 0x%X!\n", opcode);
     exit(EXIT_FAILURE);
+}
+
+void swapNibblesInRegister(CpuState* cpuState, Register givenRegister) {
+    unsigned char registerValue = readFromRegister(cpuState, givenRegister);
+    unsigned char swappedNibbles = swapNibbles(registerValue);
+
+    unsigned char flagResult = 0;
+    if (swappedNibbles == 0) flagResult |= 0x80; // Flag Z
+
+    storeInRegister(cpuState, givenRegister, swappedNibbles);
+    storeInRegister(cpuState, registerF, flagResult);
+}
+
+void swapNibblesInMemoryByte(CpuState* cpuState, RegisterPair registerPair) {
+    unsigned short address = readFromRegisterPair(cpuState, registerPair);
+    unsigned char memoryValue = readByteFromMemory(cpuState, address);
+    unsigned char swappedNibbles = swapNibbles(memoryValue);
+
+    unsigned char flagResult = 0;
+    if (swappedNibbles == 0) flagResult |= 0x80; // Flag Z
+
+    storeByteInMemory(cpuState, address, swappedNibbles);
+    storeInRegister(cpuState, registerF, flagResult);
+}
+
+unsigned char swapNibbles(unsigned char givenByte) {
+    unsigned char firstNibble = (givenByte >> 4) & 0xF;
+    unsigned char secondNibble = givenByte & 0xF;
+    return (secondNibble << 4) | firstNibble;
 }
